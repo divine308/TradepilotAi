@@ -533,7 +533,7 @@ export default function Register() {
                             onChange={(event) =>
                               setName(event.target.value)
                             }
-                            placeholder="John Doe"
+                            placeholder="Divine Ton"
                             autoComplete="name"
                             required
                             className="w-full rounded-xl border border-[#29213D]/[0.09] bg-[#F8F7FA] py-3.5 pl-11 pr-4 text-xs font-medium text-[#29213D] outline-none transition placeholder:text-[#29213D]/20 focus:border-violet-300 focus:bg-white focus:ring-4 focus:ring-violet-500/[0.06]"
@@ -774,3 +774,4 @@ export default function Register() {
     </div>
   );
 }
+
