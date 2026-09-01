@@ -22,12 +22,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import AppLayout from "../components/AppLayout";
-
-const API_URL = (
-  import.meta.env.VITE_BACKEND_URL ||
-  "https://tradepilot-h7kw.onrender.com"
-).replace(/\/$/, "");
-
+import { getDashboardOverview } from "../services/api";
 
 /* ============================================================
    HELPERS
@@ -152,63 +147,35 @@ export default function Portfolio() {
   const [error, setError] = useState("");
 
   const fetchPortfolio = useCallback(
-    async (isRefresh = false) => {
-      try {
-        if (isRefresh) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
-
-        setError("");
-
-        const token =
-          localStorage.getItem("token") ||
-          localStorage.getItem("access_token");
-
-        const headers = {
-          "Content-Type": "application/json",
-        };
-
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-
-        const response = await fetch(
-          `${API_URL}/api/dashboard/overview`,
-          {
-            method: "GET",
-            headers,
-            credentials: "include",
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data?.detail ||
-              data?.message ||
-              "Unable to load portfolio."
-          );
-        }
-
-        setPortfolio(data);
-      } catch (err) {
-        console.error("Portfolio fetch error:", err);
-
-        setError(
-          err?.message ||
-            "Unable to connect to the portfolio service."
-        );
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
+  async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
       }
-    },
-    []
-  );
 
+      setError("");
+
+      const data = await getDashboardOverview();
+
+      setPortfolio(data);
+    } catch (err) {
+      console.error("Portfolio fetch error:", err);
+
+      setError(
+        err?.response?.data?.detail ||
+          err?.response?.data?.message ||
+          err?.message ||
+          "Unable to connect to the portfolio service."
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  },
+  []
+);
 
   useEffect(() => {
     fetchPortfolio();
@@ -1973,3 +1940,4 @@ function BottomStat({
 
   );
 }
+

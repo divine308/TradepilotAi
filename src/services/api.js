@@ -1,4 +1,9 @@
+
 import axios from "axios";
+
+/* ============================================================
+   API CONFIG
+============================================================ */
 
 const API_URL = (
   import.meta.env.VITE_API_URL ||
@@ -14,7 +19,7 @@ const api = axios.create({
 });
 
 /* ============================================================
-   JWT
+   JWT REQUEST INTERCEPTOR
 ============================================================ */
 
 api.interceptors.request.use(
@@ -39,7 +44,17 @@ api.interceptors.response.use(
   (response) => response,
 
   (error) => {
-    if (error?.response?.status === 401) {
+    const status = error?.response?.status;
+    const requestUrl = error?.config?.url || "";
+
+    /*
+      Login can legitimately return 401 for invalid credentials.
+      Do NOT redirect in that case.
+    */
+    const isLoginRequest =
+      requestUrl.includes("/api/auth/login");
+
+    if (status === 401 && !isLoginRequest) {
       localStorage.removeItem("access_token");
 
       const path = window.location.pathname;
@@ -64,8 +79,22 @@ export function getApiErrorMessage(
   error,
   fallback = "Something went wrong."
 ) {
+  const detail = error?.response?.data?.detail;
+
+  /*
+    FastAPI validation errors can return an array.
+  */
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => item?.msg || String(item))
+      .join(", ");
+  }
+
+  if (typeof detail === "string") {
+    return detail;
+  }
+
   return (
-    error?.response?.data?.detail ||
     error?.response?.data?.message ||
     error?.response?.data?.error ||
     error?.message ||
@@ -74,36 +103,62 @@ export function getApiErrorMessage(
 }
 
 /* ============================================================
-   AUTH
+AUTH
 ============================================================ */
 
 export async function login(email, password) {
-  const response = await api.post(
-    "/api/auth/login",
-    {
-      email,
-      password,
-    }
-  );
+const response = await api.post(
+"/api/auth/login",
+{
+email: String(email).trim().toLowerCase(),
+password,
+}
+);
 
-  return response.data;
+const data = response.data;
+
+if (!data?.access_token) {
+throw new Error("No authentication token received.");
+}
+
+// Store JWT immediately after successful authentication
+localStorage.setItem(
+"access_token",
+data.access_token
+);
+
+return data;
 }
 
 export async function register(
-  name,
-  email,
-  password
+name,
+email,
+password
 ) {
-  const response = await api.post(
-    "/api/auth/register",
-    {
-      name,
-      email,
-      password,
-    }
-  );
+const response = await api.post(
+"/api/auth/register",
+{
+name: String(name).trim(),
+email: String(email)
+.trim()
+.toLowerCase(),
+password,
+}
+);
 
-  return response.data;
+const data = response.data;
+
+if (!data?.access_token) {
+throw new Error("No authentication token received.");
+}
+
+// Registration also authenticates the user
+localStorage.setItem(
+"access_token",
+data.access_token
+);
+
+return data;
 }
 
 /* ============================================================
@@ -152,7 +207,6 @@ export async function getPositions() {
   return [];
 }
 
-
 /* ============================================================
    AI AGENT ANALYSIS
 ============================================================ */
@@ -170,12 +224,13 @@ export async function analyzeSymbol(symbol) {
   return response.data;
 }
 
-
 /* ============================================================
    MULTI-SYMBOL AGENT ANALYSIS
 ============================================================ */
 
-export async function analyzeAgentSymbols(symbols) {
+export async function analyzeAgentSymbols(
+  symbols
+) {
   const results = await Promise.allSettled(
     symbols.map((symbol) =>
       analyzeSymbol(symbol)
@@ -183,7 +238,9 @@ export async function analyzeAgentSymbols(symbols) {
   );
 
   return results.map((result, index) => ({
-    symbol: symbols[index],
+    symbol: String(symbols[index])
+      .trim()
+      .toUpperCase(),
 
     success:
       result.status === "fulfilled",
@@ -266,10 +323,25 @@ export async function executeTrade(
   const response = await api.post(
     "/api/trading/execute",
     {
-      symbol: String(symbol).trim().toUpperCase(),
+      symbol: String(symbol)
+        .trim()
+        .toUpperCase(),
+
       side,
       quantity,
     }
+  );
+
+  return response.data;
+}
+
+/* ============================================================
+   CLOSE ALL POSITIONS
+============================================================ */
+
+export async function closeAllPositions() {
+  const response = await api.post(
+    "/api/trading/positions/close-all"
   );
 
   return response.data;
@@ -310,45 +382,49 @@ export async function getLiveDashboard() {
   if (overviewResult.status === "rejected") {
     errors.push({
       source: "overview",
-      error:
-        overviewResult.reason?.response?.data?.detail ||
-        overviewResult.reason?.message ||
-        "Unable to load dashboard overview.",
+      error: getApiErrorMessage(
+        overviewResult.reason,
+        "Unable to load dashboard overview."
+      ),
     });
   }
 
   if (accountResult.status === "rejected") {
     errors.push({
       source: "account",
-      error:
-        accountResult.reason?.response?.data?.detail ||
-        accountResult.reason?.message ||
-        "Unable to load account.",
+      error: getApiErrorMessage(
+        accountResult.reason,
+        "Unable to load account."
+      ),
     });
   }
 
   if (positionsResult.status === "rejected") {
     errors.push({
       source: "positions",
-      error:
-        positionsResult.reason?.response?.data?.detail ||
-        positionsResult.reason?.message ||
-        "Unable to load positions.",
+      error: getApiErrorMessage(
+        positionsResult.reason,
+        "Unable to load positions."
+      ),
     });
   }
 
   return {
     overview,
     account,
+
     positions: Array.isArray(positions)
       ? positions
       : [],
+
     syncedAt: new Date().toISOString(),
+
     errors,
-    healthy: errors.length === 0,
+
+    healthy:
+      errors.length === 0,
   };
 }
-
 
 /* ============================================================
    MARKET DATA
@@ -368,7 +444,6 @@ export async function getMarketBars(
           .toUpperCase(),
 
         timeframe,
-
         limit,
       },
     }
@@ -376,6 +451,7 @@ export async function getMarketBars(
 
   return response.data;
 }
+
 /* ============================================================
    API KEYS
 ============================================================ */
@@ -400,23 +476,12 @@ export async function createApiKey(name) {
 }
 
 /* ============================================================
-   CLOSE ALL POSITIONS
-============================================================ */
-
-export async function closeAllPositions() {
-  const response = await api.post(
-    "/api/trading/positions/close-all"
-  );
-
-  return response.data;
-} 
-
-/* ============================================================
    LOGOUT
 ============================================================ */
 
 export function logout() {
   localStorage.removeItem("access_token");
+
   window.location.href = "/login";
 }
 
@@ -429,6 +494,10 @@ export function isAuthenticated() {
     localStorage.getItem("access_token")
   );
 }
+
+/* ============================================================
+   EXPORT
+============================================================ */
 
 export default api;
 
