@@ -400,6 +400,18 @@ export async function createApiKey(name) {
 }
 
 /* ============================================================
+   CLOSE ALL POSITIONS
+============================================================ */
+
+export async function closeAllPositions() {
+  const response = await api.post(
+    "/api/trading/positions/close-all"
+  );
+
+  return response.data;
+} 
+
+/* ============================================================
    LOGOUT
 ============================================================ */
 

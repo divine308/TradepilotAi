@@ -1,5 +1,6 @@
 import {
   Activity,
+  AlertTriangle,
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
@@ -25,6 +26,7 @@ import {
   TrendingUp,
   TriangleAlert,
   Wallet,
+  X,
   XCircle,
   Zap,
 } from "lucide-react";
@@ -43,6 +45,7 @@ import {
   getMarketBars,
   analyzeSymbol,
   getApiErrorMessage,
+  closeAllPositions,
 } from "../services/api";
 
 /* ============================================================
@@ -79,6 +82,19 @@ export default function Dashboard() {
 
   const [lastUpdated, setLastUpdated] =
     useState(null);
+
+    const [closingPositions, setClosingPositions] =
+      useState(false);
+
+    const [closePositionsError, setClosePositionsError] =
+      useState("");
+
+    const [closePositionsSuccess, setClosePositionsSuccess] =
+      useState("");
+
+    const [showCloseAllConfirm, setShowCloseAllConfirm] = 
+      useState(false);
+
 
   const [marketBars, setMarketBars] = useState([]);
   const [marketLoading, setMarketLoading] = useState(false);
@@ -633,6 +649,73 @@ useEffect(() => {
   const systemOnline =
     Boolean(dashboard) &&
     !dashboardError;
+
+
+
+/* ==========================================================
+   CLOSE ALL POSITIONS
+========================================================== */
+
+function handleCloseAllPositions() {
+  if (!positions.length || closingPositions) {
+    return;
+  }
+
+  setClosePositionsError("");
+  setClosePositionsSuccess("");
+  setShowCloseAllConfirm(true);
+}
+
+async function confirmCloseAllPositions() {
+  if (!positions.length || closingPositions) {
+    return;
+  }
+
+  try {
+    setShowCloseAllConfirm(false);
+    setClosingPositions(true);
+    setClosePositionsError("");
+    setClosePositionsSuccess("");
+
+    const result = await closeAllPositions();
+
+    setClosePositionsSuccess(
+      result?.message ||
+        "All open positions are being closed."
+    );
+
+    // Immediately refresh account + positions
+    await loadDashboard({ silent: true });
+
+    // Automatically remove success notification
+    setTimeout(() => {
+      setClosePositionsSuccess("");
+    }, 5000);
+
+  } catch (error) {
+    console.error(
+      "Close all positions error:",
+      error
+    );
+
+    setClosePositionsError(
+      getApiErrorMessage(
+        error,
+        "Unable to close all positions."
+      )
+    );
+
+    // Automatically remove error notification
+    setTimeout(() => {
+      setClosePositionsError("");
+    }, 6000);
+
+  } finally {
+    setClosingPositions(false);
+  }
+}
+
+
 
   /* ==========================================================
      RENDER
@@ -1503,20 +1586,15 @@ useEffect(() => {
           <section className="mb-6 overflow-hidden rounded-[26px] border border-[#e7e2db] bg-white shadow-[0_20px_60px_rgba(45,35,70,0.05)]">
 
             <div className="flex flex-col justify-between gap-4 border-b border-[#eeeae5] px-5 py-5 sm:flex-row sm:items-center sm:px-6">
-
               <div className="flex items-center gap-4">
-
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f1edff]">
-
                   <Layers3
                     size={16}
                     className="text-[#7859f4]"
                   />
-
                 </div>
 
                 <div>
-
                   <h2 className="text-sm font-semibold text-[#211e28]">
                     Open positions
                   </h2>
@@ -1524,32 +1602,196 @@ useEffect(() => {
                   <p className="mt-1 text-[9px] uppercase tracking-wider text-[#97909b]">
                     Live trading account positions
                   </p>
+                </div>
+              </div>
 
+              <div className="flex flex-wrap items-center gap-2">
+
+              
+              {/* CLOSE ALL POSITIONS */}
+              {positions.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleCloseAllPositions}
+                  disabled={closingPositions || loading}
+                  className="group flex items-center gap-2 rounded-xl border border-[#f0d3cf] bg-[#fff7f5] px-3 py-2 text-[8px] font-bold uppercase tracking-[0.12em] text-[#c65347] transition hover:-translate-y-0.5 hover:border-[#e8bcb6] hover:bg-[#fff0ed] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {closingPositions ? (
+                    <RefreshCw
+                      size={12}
+                      className="animate-spin"
+                    />
+                  ) : (
+                    <XCircle size={12} />
+                  )}
+
+                  {closingPositions
+                    ? "Closing..."
+                    : "Close all positions"}
+                </button>
+              )}
+
+                {/* SYNC STATUS */}
+                <div className="flex w-fit items-center gap-2 rounded-xl border border-[#e8e4de] bg-[#faf9f7] px-3 py-2">
+                  <Clock3
+                    size={12}
+                    className="text-[#8d8791]"
+                  />
+
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-[#817b85]">
+                    {loading
+                      ? "Syncing"
+                      : lastUpdated
+                        ? `Synced ${formatRelativeTime(
+                            lastUpdated
+                          )}`
+                        : "Portfolio synced"}
+                  </span>
                 </div>
 
               </div>
-
-              <div className="flex w-fit items-center gap-2 rounded-xl border border-[#e8e4de] bg-[#faf9f7] px-3 py-2">
-
-                <Clock3
-                  size={12}
-                  className="text-[#8d8791]"
-                />
-
-                <span className="text-[8px] font-bold uppercase tracking-wider text-[#817b85]">
-
-                  {loading
-                    ? "Syncing"
-                    : lastUpdated
-                      ? `Synced ${formatRelativeTime(
-                          lastUpdated
-                        )}`
-                      : "Portfolio synced"}
-
-                </span>
-
-              </div>
             </div>
+
+        
+            {/* ==========================================================
+                TRADING NOTIFICATIONS
+            ========================================================== */}
+
+            <div className="pointer-events-none fixed right-4 top-4 z-[100] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-3 sm:right-6 sm:top-6">
+
+              {/* SUCCESS */}
+              {closePositionsSuccess && (
+                <div className="pointer-events-auto animate-in slide-in-from-right-5 fade-in duration-300">
+                  <div className="flex items-start gap-3 rounded-2xl border border-[#d8eee4] bg-white px-4 py-4 shadow-[0_12px_40px_rgba(33,30,40,0.10)]">
+
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#eafaf3]">
+                      <CheckCircle2
+                        size={15}
+                        className="text-[#26966b]"
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#211e28]">
+                        Positions closed
+                      </p>
+
+                      <p className="mt-1 text-[10px] leading-5 text-[#77717c]">
+                        {closePositionsSuccess}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setClosePositionsSuccess("")}
+                      className="shrink-0 rounded-lg p-1 text-[#aaa4ad] transition hover:bg-[#f7f5f2] hover:text-[#5f5964]"
+                    >
+                      <X size={13} />
+                    </button>
+
+                  </div>
+                </div>
+              )}
+
+              {/* ERROR */}
+              {closePositionsError && (
+                <div className="pointer-events-auto animate-in slide-in-from-right-5 fade-in duration-300">
+                  <div className="flex items-start gap-3 rounded-2xl border border-[#f1d7d2] bg-white px-4 py-4 shadow-[0_12px_40px_rgba(33,30,40,0.10)]">
+
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#fff0ed]">
+                      <XCircle
+                        size={15}
+                        className="text-[#d35d4e]"
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#211e28]">
+                        Unable to close positions
+                      </p>
+
+                      <p className="mt-1 text-[10px] leading-5 text-[#9b5148]">
+                        {closePositionsError}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setClosePositionsError("")}
+                      className="shrink-0 rounded-lg p-1 text-[#aaa4ad] transition hover:bg-[#f7f5f2] hover:text-[#5f5964]"
+                    >
+                      <X size={13} />
+                    </button>
+
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+           
+            {/* ==========================================================
+                CLOSE ALL POSITIONS CONFIRMATION
+            ========================================================== */}
+
+            {showCloseAllConfirm && (
+              <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#211e28]/20 px-4 backdrop-blur-[3px]">
+
+                <div className="w-full max-w-sm animate-in zoom-in-95 fade-in duration-200">
+
+                  <div className="rounded-3xl border border-[#ebe7e1] bg-white p-6 shadow-[0_24px_80px_rgba(33,30,40,0.18)]">
+
+                    {/* ICON */}
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1ee]">
+                      <AlertTriangle
+                        size={19}
+                        className="text-[#c65347]"
+                      />
+                    </div>
+
+                    {/* CONTENT */}
+                    <div className="mt-5">
+                      <h3 className="text-sm font-bold text-[#211e28]">
+                        Close all positions?
+                      </h3>
+
+                      <p className="mt-2 text-[10px] leading-5 text-[#77717c]">
+                        You currently have{" "}
+                        <span className="font-bold text-[#211e28]">
+                          {positions.length} open position
+                          {positions.length === 1 ? "" : "s"}
+                        </span>
+                        . This will submit orders to close every
+                        open position in your trading account.
+                      </p>
+                    </div>
+
+                    {/* ACTIONS */}
+                    <div className="mt-6 flex gap-2">
+
+                      <button
+                        type="button"
+                        onClick={() => setShowCloseAllConfirm(false)}
+                        className="flex-1 rounded-xl border border-[#e8e4de] bg-[#faf9f7] px-4 py-3 text-[9px] font-bold uppercase tracking-[0.12em] text-[#6f6973] transition hover:bg-[#f4f2ef]"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={confirmCloseAllPositions}
+                        className="flex-1 rounded-xl bg-[#c65347] px-4 py-3 text-[9px] font-bold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#b8493e]"
+                      >
+                        Close all
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                </div>
+              </div>
+            )}
 
             {loading ? (
               <LoadingPositions />
