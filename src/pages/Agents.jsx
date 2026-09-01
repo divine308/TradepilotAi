@@ -405,7 +405,7 @@ function AutonomousControl({
                   <Pause size={13} />
                 )}
 
-                Stop autonomous
+                Stop AI Trading
 
               </button>
 
@@ -427,7 +427,7 @@ function AutonomousControl({
                   <Play size={13} />
                 )}
 
-                Start autonomous
+                Start AI Trading
 
               </button>
 
@@ -2642,4 +2642,3 @@ function TradeDetail({
     </div>
   );
 }
-
