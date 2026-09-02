@@ -1203,14 +1203,10 @@ const refreshAutonomousActivity = useCallback(
     try {
       const response = await getAgentActivity(100);
 
-      console.log("🔥 AUTONOMOUS ACTIVITY RESPONSE:", response);
-
       const activity =
         response?.activity ||
         response ||
         [];
-
-      console.log("🔥 ACTIVITY ARRAY:", activity);
 
       if (Array.isArray(activity)) {
         setAutonomousActivity(activity);
@@ -2642,3 +2638,4 @@ function TradeDetail({
     </div>
   );
 }
+
