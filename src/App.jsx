@@ -16,6 +16,7 @@ import ApiKeys from "./pages/ApiKeys";
 import Settings from "./pages/Settings";
 import Landing from "./pages/Landing";
 import Markets from "./pages/Markets";
+import Demo from "./pages/Demo";
 
 import { isAuthenticated } from "./services/api";
 
@@ -118,6 +119,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/demo" element={<Demo />} />
 
 
         <Route

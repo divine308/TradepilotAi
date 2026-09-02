@@ -340,10 +340,10 @@ export default function Markets() {
         `${API_URL}/api/market/bars?${params.toString()}`;
 
       try {
-        console.log(
-          "[Markets] Fetching market bars:",
-          endpoint
-        );
+        // console.log(
+        //   "[Markets] Fetching market bars:",
+        //   endpoint
+        // );
 
         const response = await fetch(endpoint, {
           method: "GET",
@@ -438,10 +438,10 @@ export default function Markets() {
         setLastUpdated(new Date());
         setBarsError("");
 
-        console.log(
-          `[Markets] ${selectedMarket.symbol}: ${normalizedBars.length} bars loaded`,
-          result
-        );
+        // console.log(
+        //   `[Markets] ${selectedMarket.symbol}: ${normalizedBars.length} bars loaded`,
+        //   result
+        // );
       } catch (error) {
         if (cancelled) {
           return;

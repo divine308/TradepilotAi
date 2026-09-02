@@ -44,7 +44,7 @@ const features = [
     number: "03",
     title: "Portfolio command",
     description:
-      "Monitor equity, positions, buying power and exposure from one beautifully organized workspace.",
+      "Monitor equity, positions, buying power and exposure from one beautifully organized dashboard.",
   },
   {
     icon: Code2,
@@ -477,7 +477,7 @@ export default function Landing() {
               to="/register"
               className="group flex items-center gap-2 rounded-xl bg-[#29213D] px-4 py-2.5 text-[10px] font-bold text-white shadow-lg shadow-[#29213D]/15 transition duration-300 hover:-translate-y-0.5 hover:bg-violet-600 hover:shadow-violet-300/30"
             >
-              Open workspace
+              Start Trading
 
               <ArrowRight
                 size={13}
@@ -1239,7 +1239,7 @@ export default function Landing() {
             </h2>
 
             <p className="mx-auto mt-6 max-w-lg text-sm leading-7 text-[#29213D]/50">
-              Build your trading workspace with AI-powered
+              Start trading with AI-powered
               analysis, autonomous agents and intelligent
               portfolio infrastructure.
             </p>

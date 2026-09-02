@@ -246,7 +246,7 @@ export default function Register() {
                 <span className="h-[2px] w-8 rounded-full bg-violet-500" />
 
                 <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
-                  New workspace
+                  New AI trading account
                 </span>
 
               </div>
@@ -267,7 +267,7 @@ export default function Register() {
 
               <p className="mt-7 max-w-lg text-[15px] leading-7 text-[#29213D]/55">
 
-                Create your Trade Pilot workspace and bring
+                Create your Trade Pilot trading system and bring
                 market intelligence, AI agents and portfolio
                 monitoring into one intelligent environment.
 
@@ -436,7 +436,7 @@ export default function Register() {
                       </div>
 
                       <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-[#29213D]/30">
-                        Workspace registration
+                        registration
                       </span>
 
                     </div>
@@ -469,7 +469,7 @@ export default function Register() {
                       </div>
 
                       <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.2em] text-violet-600">
-                        Create workspace
+                        Create AI trading account
                       </p>
 
                       <h2 className="text-3xl font-black tracking-[-0.055em] text-[#29213D] sm:text-4xl">
@@ -684,7 +684,7 @@ export default function Register() {
 
                             <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
 
-                            Initializing workspace...
+                            Initializing AI trade system...
 
                           </>
 
@@ -692,7 +692,7 @@ export default function Register() {
 
                           <>
 
-                            Create workspace
+                            Create AI trading account
 
                             <ArrowRight
                               size={14}
