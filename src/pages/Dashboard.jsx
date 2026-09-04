@@ -1069,10 +1069,13 @@ async function confirmCloseAllPositions() {
                       />
                     )}
 
-                    {formatMoney(
-                      Math.abs(
-                        unrealizedPL
-                      )
+                   {unrealizedPL >= 0 ? "+" : "-"}$
+                    {Math.abs(unrealizedPL).toLocaleString(
+                      undefined,
+                      {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }
                     )}
                   </div>
 
@@ -1940,10 +1943,13 @@ async function confirmCloseAllPositions() {
                                   />
                                 )}
 
-                                {formatMoney(
-                                  Math.abs(
-                                    pl
-                                  )
+                               {pl >= 0 ? "+" : "-"}$
+                                {Math.abs(pl).toLocaleString(
+                                  undefined,
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  }
                                 )}
 
                               </div>
@@ -2038,16 +2044,20 @@ async function confirmCloseAllPositions() {
               }
               accent="peach"
             />
-
-            <BottomStat
-              icon={BarChart3}
-              label="Unrealized P/L"
-              value={formatMoney(
-                unrealizedPL
-              )}
-              description="Current"
-              accent="purple"
-            />
+              <BottomStat
+                icon={BarChart3}
+                label="Unrealized P/L"
+                value={
+                  `${unrealizedPL >= 0 ? "+" : "-"}$${Math.abs(
+                    unrealizedPL
+                  ).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}`
+                }
+                description="Current"
+                accent="purple"
+              />
 
           </section>
 
@@ -3864,4 +3874,3 @@ function formatRelativeTime(
 
   return `${hours}h ago`;
 }
-
