@@ -44,6 +44,32 @@ function formatCurrency(value, currency = "USD") {
 }
 
 
+function formatPL(value, currency = "USD") {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "—";
+  }
+
+  const formatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Math.abs(amount));
+
+  if (amount > 0) {
+    return `+${formatted}`;
+  }
+
+  if (amount < 0) {
+    return `-${formatted}`;
+  }
+
+  return formatted;
+}
+
+
 function formatCompactCurrency(value, currency = "USD") {
   const amount = Number(value);
 
@@ -545,10 +571,7 @@ export default function Portfolio() {
             <OverviewCard
               icon={TrendingUp}
               label="Unrealized P/L"
-              value={formatCurrency(
-                unrealizedPL,
-                currency
-              )}
+              value={formatPL(unrealizedPL, currency)}
               trend={formatPercent(
                 portfolioReturn
               )}
@@ -671,10 +694,7 @@ export default function Portfolio() {
                       <ArrowDownRight size={13} />
                     )}
 
-                    {formatCurrency(
-                      unrealizedPL,
-                      currency
-                    )}
+                   {formatPL(unrealizedPL, currency)}
 
                   </div>
 
@@ -1837,11 +1857,7 @@ function PositionRow({
             <ArrowDownRight size={13} />
           )}
 
-          {formatCurrency(
-            position.unrealized_pl,
-            currency
-          )}
-
+          {formatPL(position.unrealized_pl, currency)}
         </div>
 
 
